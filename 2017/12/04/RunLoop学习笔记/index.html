@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="RunLoop," />
+  <meta name="keywords" content="iOS学习, RunLoop," />
 
 
 
@@ -80,7 +80,7 @@
 
 
 <meta name="description" content="iOS学习之深入理解RunLoop RunLoop的定义与概念 RunLoop的主要作用 main函数中的RunLoop RunLoop与线程的关系 RunLoop的消息种类 RunLoop的对外接口 RunLoop的mode RunLoop的内部逻辑 RunLoop在iOS中内部的应用 RunLoop在iOS开发中的">
-<meta name="keywords" content="RunLoop">
+<meta name="keywords" content="iOS学习, RunLoop">
 <meta property="og:type" content="article">
 <meta property="og:title" content="iOS学习之深入理解RunLoop">
 <meta property="og:url" content="http://www.jianshu.com/u/5e73c3aefeb5/2017/12/04/RunLoop学习笔记/index.html">
@@ -91,12 +91,7 @@
 <meta property="og:image" content="https://blog.ibireme.com/wp-content/uploads/2015/05/RunLoop_0.png">
 <meta property="og:image" content="https://blog.ibireme.com/wp-content/uploads/2015/05/RunLoop_1.png">
 <meta property="og:image" content="https://blog.ibireme.com/wp-content/uploads/2015/05/RunLoop_5.png">
-<meta property="og:image" content="http://m.qpic.cn/psb?/V103mvlp36Y6AN/vzebWLy07DJkotQ3PvOYXrTAtP27OZaaxVrkuZlcvRo!/b/dPMAAAAAAAAA&bo=WARgAQAAAAADBx8!&rf=viewer_4">
-<meta property="og:image" content="http://m.qpic.cn/psb?/V103mvlp36Y6AN/aVsIllgHoYc8jl2xDygEkkO*8iUQt.DxpsGziEm*mdQ!/b/dPMAAAAAAAAA&bo=LAKUAQAAAAADB5k!&rf=viewer_4">
-<meta property="og:image" content="http://m.qpic.cn/psb?/V103mvlp36Y6AN/vsvIA2DS4MuH0AxvGuJkeozZgu4va9QZ3hDbsHt4GEs!/b/dPMAAAAAAAAA&bo=igWiAQAAAAADBw4!&rf=viewer_4">
-<meta property="og:image" content="http://m.qpic.cn/psb?/V103mvlp36Y6AN/0zGi5q.GuAaAltZC19fuZEKcInbeMbm*ykB3IHiE1b4!/b/dPMAAAAAAAAA&bo=VgGyAAAAAAADB8c!&rf=viewer_4">
-<meta property="og:image" content="http://m.qpic.cn/psb?/V103mvlp36Y6AN/VNp.tveZvK2ntV1ubmcr6bTg4JoeWVxpiQ0Jm3N9IBI!/b/dPIAAAAAAAAA&bo=gAKQAgAAAAADBzI!&rf=viewer_4">
-<meta property="og:updated_time" content="2017-12-04T04:41:55.107Z">
+<meta property="og:updated_time" content="2017-12-04T04:56:38.478Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="iOS学习之深入理解RunLoop">
 <meta name="twitter:description" content="iOS学习之深入理解RunLoop RunLoop的定义与概念 RunLoop的主要作用 main函数中的RunLoop RunLoop与线程的关系 RunLoop的消息种类 RunLoop的对外接口 RunLoop的mode RunLoop的内部逻辑 RunLoop在iOS中内部的应用 RunLoop在iOS开发中的实践 总结 参考文献  RunLoop的定义与概念 顾名思义 RunLoop，">
@@ -272,7 +267,7 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-04T12:41:55+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-04T12:56:38+08:00">
                 2017-12-04
               </time>
             
@@ -537,15 +532,19 @@
 <h4 id="后台常驻线程（很常用）"><a href="#后台常驻线程（很常用）" class="headerlink" title="后台常驻线程（很常用）"></a>后台常驻线程（很常用）</h4><ul>
 <li><p>解释上述 AFNetworking 长时间连接问题 。 </p>
 </li>
-<li><p>方法1即 AFNetworking 中使用的方法，它使得 thread 在打开后，使用结束方法<code>CFRunLoopStop(CFRunLoopGetCurrent())</code>并没有正常结束，该结束方法对这个创建 Thread 的方式无效。所以导致了内存暴增，图如下<br> <img src="http://m.qpic.cn/psb?/V103mvlp36Y6AN/vzebWLy07DJkotQ3PvOYXrTAtP27OZaaxVrkuZlcvRo!/b/dPMAAAAAAAAA&amp;bo=WARgAQAAAAADBx8!&amp;rf=viewer_4" alt=""></p>
-<p><img src="http://m.qpic.cn/psb?/V103mvlp36Y6AN/aVsIllgHoYc8jl2xDygEkkO*8iUQt.DxpsGziEm*mdQ!/b/dPMAAAAAAAAA&amp;bo=LAKUAQAAAAADB5k!&amp;rf=viewer_4" alt=""></p>
+<li><p>方法1即 AFNetworking 中使用的方法，它使得 thread 在打开后，使用结束方法<code>CFRunLoopStop(CFRunLoopGetCurrent())</code>并没有正常结束，该结束方法对这个创建 Thread 的方式无效。所以导致了内存暴增，图如下</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//方法1 ， 会导致内存暴涨</span><br><span class="line">- (void)run &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        // 这里写任务</span><br><span class="line">        NSLog(@&quot;----run1-----&quot;);</span><br><span class="line"></span><br><span class="line">        [[NSRunLoop currentRunLoop] addPort:[NSPort port] forMode:NSDefaultRunLoopMode];</span><br><span class="line">        [[NSRunLoop currentRunLoop] run];</span><br><span class="line"></span><br><span class="line">        NSLog(@&quot;未执行&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> ​</p>
 </li>
-<li><p>方法2 如图，由于它是一个非线程阻塞的方法，所以有时在线程还已经退出后，才开始暂停这个线程，自然会使得程序崩溃。<br> <img src="http://m.qpic.cn/psb?/V103mvlp36Y6AN/vsvIA2DS4MuH0AxvGuJkeozZgu4va9QZ3hDbsHt4GEs!/b/dPMAAAAAAAAA&amp;bo=igWiAQAAAAADBw4!&amp;rf=viewer_4" alt=""></p>
-</li>
-<li><p>方法3 才是我推荐的方法 ，它可以正确的创建一个后台常驻线程。<br><img src="http://m.qpic.cn/psb?/V103mvlp36Y6AN/0zGi5q.GuAaAltZC19fuZEKcInbeMbm*ykB3IHiE1b4!/b/dPMAAAAAAAAA&amp;bo=VgGyAAAAAAADB8c!&amp;rf=viewer_4" alt=""></p>
-<ul>
-<li>执行结果如下<br><img src="http://m.qpic.cn/psb?/V103mvlp36Y6AN/VNp.tveZvK2ntV1ubmcr6bTg4JoeWVxpiQ0Jm3N9IBI!/b/dPIAAAAAAAAA&amp;bo=gAKQAgAAAAADBzI!&amp;rf=viewer_4" alt=""></li>
 </ul>
+<ul>
+<li><p>方法2 如图，由于它是一个非线程阻塞的方法，所以有时在线程还已经退出后，才开始暂停这个线程，自然会使得程序崩溃。</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">方法2,当用 [runLoop runMode:NSRunLoopCommonModes beforeDate:[NSDate distantFuture]];,然后调用CFRunLoopStop,此方法会。[ViewController performSelector:onThread:withObject:waitUntilDone:modes:]: target thread exited while waiting for the perform&apos; crash。是因为 [runLoop runMode:NSRunLoopCommonModes beforeDate:[NSDate distantFuture]]; 无法阻塞线程，所以线程很快执行完run 方法。然后线程exit，导致奔溃（在一个退出的线程，当然这个时候线程没有释放，执行方法奔溃）</span><br><span class="line">*/</span><br><span class="line">- (void)run &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];</span><br><span class="line">        [runLoop runMode:NSRunLoopCommonModes beforeDate:[NSDate distantFuture]];</span><br><span class="line"></span><br><span class="line">        NSLog(@&quot;未执行&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> ​</p>
+</li>
+<li><p>方法3 才是我推荐的方法 ，它可以正确的创建一个后台常驻线程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//方法3</span><br><span class="line">- (void)run &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        CFRunLoopRun();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>​</p>
 </li>
 <li><p>下面解释一下原理吧 </p>
 <ul>
@@ -604,7 +603,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/RunLoop/" rel="tag"># RunLoop</a>
+            <a href="/tags/iOS学习-RunLoop/" rel="tag"># iOS学习, RunLoop</a>
           
         </div>
       
