@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="">
+
+
+
+
+
+  <meta name="keywords" content="iOS学习," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="常用的clang命令 clang  -rewrite-objc  main.m 将obj文件重写为 c， c++文件 clang -Xclang -ast-dump -fsyntax-only main.m 生成文件生成树 clang -Xclang -dump-tokens main.m 这里会把代码切成一个个 To">
+<meta name="keywords" content="iOS学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解iOS编译过程">
+<meta property="og:url" content="http://www.jianshu.com/u/5e73c3aefeb5/2017/12/16/lernMoreAboutCompler/index.html">
+<meta property="og:site_name" content="LY&#39;s Blog">
+<meta property="og:description" content="常用的clang命令 clang  -rewrite-objc  main.m 将obj文件重写为 c， c++文件 clang -Xclang -ast-dump -fsyntax-only main.m 生成文件生成树 clang -Xclang -dump-tokens main.m 这里会把代码切成一个个 Token，比如大小括号，等于号还有字符串等   根据一个简单的例子来观察是如何进行">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3262069-7cc2005d1cf537b4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3262069-7f0c710fc976739e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3262069-268970a33e4a777b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3262069-10a02cb1a019e4d8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3262069-4c9b4433ea0c503a.gif?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-12-16T14:14:23.555Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解iOS编译过程">
+<meta name="twitter:description" content="常用的clang命令 clang  -rewrite-objc  main.m 将obj文件重写为 c， c++文件 clang -Xclang -ast-dump -fsyntax-only main.m 生成文件生成树 clang -Xclang -dump-tokens main.m 这里会把代码切成一个个 Token，比如大小括号，等于号还有字符串等   根据一个简单的例子来观察是如何进行">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/3262069-7cc2005d1cf537b4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":30,"b2t":true,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.jianshu.com/u/5e73c3aefeb5/2017/12/16/lernMoreAboutCompler/"/>
+
+
+
+
+
+  <title>深入理解iOS编译过程 | LY's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">LY's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">最怕你一生碌碌无为，却告诉自己平凡可贵</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.jianshu.com/u/5e73c3aefeb5/2017/12/16/lernMoreAboutCompler/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="shenglanya">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/images/avatar/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="LY's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入理解iOS编译过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-16T22:14:23+08:00">
+                2017-12-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS学习/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS学习</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="常用的clang命令"><a href="#常用的clang命令" class="headerlink" title="常用的clang命令"></a>常用的clang命令</h3><ul>
+<li><code>clang  -rewrite-objc  main.m</code> 将obj文件重写为 c， c++文件</li>
+<li><code>clang -Xclang -ast-dump -fsyntax-only main.m</code> 生成文件生成树</li>
+<li><code>clang -Xclang -dump-tokens main.m</code> 这里会把代码切成一个个 Token，比如大小括号，等于号还有字符串等</li>
+</ul>
+<ul>
+<li><p>根据一个简单的例子来观察是如何进行编译的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#import &lt;Foundation/Foundation.h&gt;</span><br><span class="line">#define DEFINEEight 8</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        int eight = DEFINEEight;</span><br><span class="line">        int six = 6;</span><br><span class="line">        NSString* site = [[NSString alloc] initWithUTF8String:&quot;starming&quot;];</span><br><span class="line">        int rank = eight + six;</span><br><span class="line">        NSLog(@&quot;%@ rank %d&quot;, site, rank);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="编译流程"><a href="#编译流程" class="headerlink" title="编译流程"></a>编译流程</h3><ul>
+<li><p>在命令行编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">xcrun -sdk iphoneos clang -arch armv7 -F Foundation -fobjc-arc -c main.m -o main.o</span><br><span class="line">xcrun -sdk iphoneos clang main.o -arch armv7 -fobjc-arc -framework Foundation -o main</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 这样还没法看清clang的全部过程，可以通过-E查看clang在预处理处理这步做了什么。</span><br><span class="line">clang -E main.m</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 执行完后可以看到文件</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 1 "/System/Library/Frameworks/Foundation.framework/Headers/FoundationLegacySwiftCompatibility.h" 1 3</span><br><span class="line"><span class="meta">#</span> 185 "/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h" 2 3</span><br><span class="line"><span class="meta">#</span> 2 "main.m" 2</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        int eight = 8;</span><br><span class="line">        int six = 6;</span><br><span class="line">        NSString* site = [[NSString alloc] initWithUTF8String:"starming"];</span><br><span class="line">        int rank = eight + six;</span><br><span class="line">        NSLog(@"%@ rank %d", site, rank);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 这个过程的处理包括宏的替换，头文件的导入，以及类似#if的处理。预处理完成后就会进行词法分析，这里会把代码切成一个个 Token，比如大小括号，等于号还有字符串等。</span><br><span class="line">clang -fmodules -fsyntax-only -Xclang -dump-tokens main.m</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 然后是语法分析，验证语法是否正确，然后将所有节点组成抽象语法树 AST 。</span><br><span class="line">clang -fmodules -fsyntax-only -Xclang -ast-dump main.m</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 完成这些步骤后就可以开始IR中间代码的生成了，CodeGen 会负责将语法树自顶向下遍历逐步翻译成 LLVM IR，IR 是编译过程的前端的输出后端的输入。</span><br><span class="line">clang -S -fobjc-arc -emit-llvm main.m -o main.ll</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 这里 LLVM 会去做些优化工作，在 Xcode 的编译设置里也可以设置优化级别-01，-03，-0s，还可以写些自己的 Pass。</span><br><span class="line"><span class="meta">#</span> Pass 是 LLVM 优化工作的一个节点，一个节点做些事，一起加起来就构成了 LLVM 完整的优化和转化。</span><br><span class="line"><span class="meta">#</span> 如果开启了 bitcode 苹果会做进一步的优化，有新的后端架构还是可以用这份优化过的 bitcode 去生成。</span><br><span class="line">clang -emit-llvm -c main.m -o main.bc</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 生成汇编</span><br><span class="line">clang -S -fobjc-arc main.m -o main.s</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 生成目标文件</span><br><span class="line">clang -fmodules -c main.m -o main.o</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 生成可执行文件，这样就能够执行看到输出结果</span><br><span class="line">clang main.o -o main</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 执行</span><br><span class="line">./main</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 输出</span><br><span class="line">starming rank 14</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>下面是完整步骤</p>
+<ul>
+<li>编译信息写入辅助文件，创建文件架构 .app 文件</li>
+<li>处理文件打包信息</li>
+<li>执行 CocoaPod 编译前脚本，checkPods Manifest.lock</li>
+<li>编译.m文件，使用 CompileC 和 clang 命令</li>
+<li>链接需要的 Framework</li>
+<li>编译 xib</li>
+<li>拷贝 xib ，资源文件</li>
+<li>编译 ImageAssets</li>
+<li>处理 info.plist</li>
+<li>执行 CocoaPod 脚本</li>
+<li>拷贝标准库</li>
+<li>创建 .app 文件和签名</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>在 Xcode 中查看 clang 编译 .m 文件的过程</p>
+<ul>
+<li><p>在 Xcode 编译过后，可以通过 Show the report navigator 里对应 target 的 build 中查看每个 .m 文件的 clang 编译信息。可以直接在 help 中搜索 “ Show the report navigator ” 就会出现</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/3262069-7cc2005d1cf537b4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="在Xcode中查看编译过程.png"></p>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>使用编译 Masonry 框架的 MASCompositeConstraint.m 为例， 首先对任务进行描述</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CompileC /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Objects-normal/x86_64/MASCompositeConstraint.o </span><br><span class="line"></span><br><span class="line">Masonry/Masonry/MASCompositeConstraint.m normal x86_64 objective-c com.apple.compilers.llvm.clang.1_0.compiler</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>更新工作路径，同时设置 PATH</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd /Users/lanya/Desktop/Neuer_iOS/Pods</span><br><span class="line">    export LANG=en_US.US-ASCII</span><br><span class="line">    export PATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>接下来是实际的编译命令</p>
+<ul>
+<li><p>先介绍一下 clang 的命令参数，再看👇的编译命令会更容易理解</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">clang 命令参数</span><br><span class="line"></span><br><span class="line">-x 编译语言比如objective-c</span><br><span class="line">-arch 编译的架构，比如arm7</span><br><span class="line">-f 以-f开头的。</span><br><span class="line">-W 以-W开头的，可以通过这些定制编译警告</span><br><span class="line">-D 以-D开头的，指的是预编译宏，通过这些宏可以实现条件编译</span><br><span class="line">-iPhoneSimulator11.1.sdk 编译采用的iOS SDK版本</span><br><span class="line">-I 把编译信息写入指定的辅助文件</span><br><span class="line">-F 需要的Framework</span><br><span class="line">-c 标识符指明需要运行预处理器，语法分析，类型检查，LLVM生成优化以及汇编代码生成.o文件</span><br><span class="line">-o 编译结果</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>具体的编译过程</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x objective-c -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu11 -fobjc-arc -fmodules -gmodules -fmodules-cache-path=/Users/lanya/Library/Developer/Xcode/DerivedData/ModuleCache -fmodules-prune-interval=86400 -fmodules-prune-after=345600 -fbuild-session-file=/Users/lanya/Library/Developer/Xcode/DerivedData/ModuleCache/Session.modulevalidation -fmodules-validate-once-per-build-session -Wnon-modular-include-in-framework-module -Werror=non-modular-include-in-framework-module -fmodule-name=Masonry -fapplication-extension -Wno-trigraphs -fpascal-strings -O0 -fno-common -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Wdocumentation -Wunreachable-code -Wno-implicit-atomic-properties -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-arc-repeated-use-of-weak -Wduplicate-method-match -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wconditional-uninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wnon-literal-null-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wpointer-sign -Wno-newline-eof -Wno-selector -Wno-strict-selector-match -Wundeclared-selector -Wno-deprecated-implementations -DPOD_CONFIGURATION_DEBUG=1 -DDEBUG=1 -DCOCOAPODS=1 -DOBJC_OLD_DISPATCH_PROTOTYPES=0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator11.2.sdk -fasm-blocks -fstrict-aliasing -Wprotocol -Wdeprecated-declarations -mios-simulator-version-min=8.0 -g -Wno-sign-conversion -Winfinite-recursion -Wcomma -Wblock-capture-autoreleasing -Wstrict-prototypes -Wunguarded-availability -fobjc-abi-version=2 -fobjc-legacy-dispatch -index-store-path /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Index/DataStore -iquote /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Masonry-generated-files.hmap -I/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Masonry-own-target-headers.hmap -I/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Masonry-all-non-framework-target-headers.hmap -ivfsoverlay /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/all-product-headers.yaml -iquote /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Masonry-project-headers.hmap -I/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Products/Debug-iphonesimulator/Masonry/include -I/Users/lanya/Desktop/Neuer_iOS/Pods/Headers/Private -I/Users/lanya/Desktop/Neuer_iOS/Pods/Headers/Public -I/Users/lanya/Desktop/Neuer_iOS/Pods/Headers/Public/PgyUpdate -I/Users/lanya/Desktop/Neuer_iOS/Pods/Headers/Public/Pgyer -I/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/DerivedSources/x86_64 -I/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/DerivedSources -F/Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Products/Debug-iphonesimulator/Masonry -include /Users/lanya/Desktop/Neuer_iOS/Pods/Target\ Support\ Files/Masonry/Masonry-prefix.pch -MMD -MT dependencies -MF /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Objects-normal/x86_64/MASCompositeConstraint.d --serialize-diagnostics /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Objects-normal/x86_64/MASCompositeConstraint.dia -c /Users/lanya/Desktop/Neuer_iOS/Pods/Masonry/Masonry/MASCompositeConstraint.m -o /Users/lanya/Library/Developer/Xcode/DerivedData/NEUer-bjvoyplxzoxgkpgkiodfvurkgzwn/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/Masonry.build/Objects-normal/x86_64/MASCompositeConstraint.o</span><br></pre></td></tr></table></figure>
+<p>​</p>
+<ul>
+<li><p>编译完第三方库后会进行构建我们程序的 target</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Create product structure                          </span><br><span class="line">Process product packaging</span><br><span class="line">Run custom shell script 'Check Pods Manifest.lock'</span><br><span class="line">Compile ... 各个项目中的.m文件</span><br><span class="line">Link /Users/... 路径</span><br><span class="line">Copy ... 静态文件</span><br><span class="line">Compile asset catalogs</span><br><span class="line">Compile Storyboard file ...</span><br><span class="line"></span><br><span class="line">Process info.plist</span><br><span class="line">Link Storyboards</span><br><span class="line">Run custom shell script 'Embed Pods Frameworks'</span><br><span class="line">Run custom shell script 'Copy Pods Resources'</span><br><span class="line">...</span><br><span class="line">Touch NEUer.app</span><br><span class="line">Sign NEUer.app</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="http://upload-images.jianshu.io/upload_images/3262069-7f0c710fc976739e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="target.png"></p>
+<ul>
+<li><p>Target 在 Build 过程的控制</p>
+<ul>
+<li>在 Xcode 的 Project editor 中的 Build Setting，Build Phases 和 Build Rules 能够控制编译的过程。</li>
+</ul>
+</li>
+<li><p>Build Phases</p>
+<ul>
+<li>构建可执行文件的规则。指定 target 的依赖项目，在 target build 之前需要先 build 的依赖。在 Compile Source 中指定所有必须编译的文件，这些文件会根据 Build Setting 和 Build Rules 里的设置来处理。</li>
+<li>在 Link Binary With Libraries 里会列出所有的静态库和动态库，它们会和编译生成的目标文件进行链接。</li>
+<li>build phase 还会把静态资源拷贝到 bundle 里。</li>
+<li>可以通过在 build phases 里添加自定义脚本来做些事情，比如像 CocoaPods 所做的那样。</li>
+</ul>
+</li>
+<li><p>Bulid Rules</p>
+<ul>
+<li>指定不同文件类型如何编译。每条 build rule 指定了该类型如何处理以及输出在哪。可以增加一条新规则对特定文件类型添加处理方法。</li>
+</ul>
+</li>
+<li><p>Bulid Settings</p>
+<ul>
+<li>在 build 的过程中各个阶段的选项的设置。</li>
+</ul>
+</li>
+<li><p>pbxproj 工程文件</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/3262069-268970a33e4a777b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="显示包内容.png"></p>
+</li>
+</ul>
+<p>   <img src="http://upload-images.jianshu.io/upload_images/3262069-10a02cb1a019e4d8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="打开包.png"></p>
+<pre><code>* build 过程控制的这些设置都会被保存在工程文件 .pbxproj 里。在这个文件中可以找 rootObject 的 ID 值
+
+* 然后根据这个 ID 找到 main 工程的定义。
+
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* Begin PBXProject section */</span><br><span class="line">        2EC5E1AA1E7814B200BAB0EF /* Project object */ = &#123;</span><br><span class="line">			isa = PBXProject;</span><br><span class="line">			......</span><br><span class="line">/* End PBXProject section */</span><br></pre></td></tr></table></figure>
+
+* 在 targets 里会指向各个 taget 的定义
+
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">targets = (</span><br><span class="line">				2EC5E1B11E7814B200BAB0EF /* EWork */,</span><br><span class="line">			);</span><br><span class="line"></span><br><span class="line">// 根据 2EC5E1B11E7814B200BAB0EF 可以找到具体各个的定义</span><br><span class="line">/**</span><br><span class="line">	这个里面又有更多的 ID 可以得到更多的定义，其中 buildConfigurationList 指向了可用的配置项，包含 Debug 和 Release。可以看到还有 buildPhases，buildRules 和 dependencies 都能够通过这里索引找到更详细的定义。</span><br><span class="line">*/</span><br><span class="line"></span><br><span class="line">/* Begin PBXNativeTarget section */</span><br><span class="line">		2EC5E1B11E7814B200BAB0EF /* EWork */ = &#123;</span><br><span class="line">			isa = PBXNativeTarget;</span><br><span class="line">			buildConfigurationList = 2EC5E1CC1E7814B200BAB0EF /* Build configuration list for PBXNativeTarget &quot;EWork&quot; */;</span><br><span class="line">			buildPhases = (</span><br><span class="line">				73F5AAE2AEC5EE766978C0E2 /* [CP] Check Pods Manifest.lock */,</span><br><span class="line">				2EC5E1AE1E7814B200BAB0EF /* Sources */,</span><br><span class="line">				2EC5E1AF1E7814B200BAB0EF /* Frameworks */,</span><br><span class="line">				2EC5E1B01E7814B200BAB0EF /* Resources */,</span><br><span class="line">				B42D03564A9A71BAD7183E61 /* [CP] Embed Pods Frameworks */,</span><br><span class="line">				4672989246AFA7B2776DFA56 /* [CP] Copy Pods Resources */,</span><br><span class="line">			);</span><br><span class="line">			buildRules = (</span><br><span class="line">			);</span><br><span class="line">			dependencies = (</span><br><span class="line">			);</span><br><span class="line">			name = EWork;</span><br><span class="line">			productName = EWork;</span><br><span class="line">			productReference = 2EC5E1B21E7814B200BAB0EF /* EWork.app */;</span><br><span class="line">			productType = &quot;com.apple.product-type.application&quot;;</span><br><span class="line">		&#125;;</span><br><span class="line">/* End PBXNativeTarget section */</span><br><span class="line"></span><br><span class="line">  // 比如 XCConfigurationList</span><br><span class="line">  /* Begin XCConfigurationList section */</span><br><span class="line">  		2EC5E1AD1E7814B200BAB0EF /* Build configuration list for PBXProject &quot;EWork&quot; */ = &#123;</span><br><span class="line">  			isa = XCConfigurationList;</span><br><span class="line">  			buildConfigurations = (</span><br><span class="line">  				2EC5E1CA1E7814B200BAB0EF /* Debug */,</span><br><span class="line">  				2EC5E1CB1E7814B200BAB0EF /* Release */,</span><br><span class="line">  			);</span><br><span class="line">  			defaultConfigurationIsVisible = 0;</span><br><span class="line">  			defaultConfigurationName = Release;</span><br><span class="line">  		&#125;;</span><br><span class="line">  		2EC5E1CC1E7814B200BAB0EF /* Build configuration list for PBXNativeTarget &quot;EWork&quot; */ = &#123;</span><br><span class="line">  			isa = XCConfigurationList;</span><br><span class="line">  			buildConfigurations = (</span><br><span class="line">  				2EC5E1CD1E7814B200BAB0EF /* Debug */,</span><br><span class="line">  				2EC5E1CE1E7814B200BAB0EF /* Release */,</span><br><span class="line">  			);</span><br><span class="line">  			defaultConfigurationIsVisible = 0;</span><br><span class="line">  			defaultConfigurationName = Release;</span><br><span class="line">  		&#125;;</span><br><span class="line">  /* End XCConfigurationList section */</span><br></pre></td></tr></table></figure>
+</code></pre><ul>
+<li><p>编译后生成的二进制内容 Link Map File</p>
+<ul>
+<li><p><a href="http://blog.csdn.net/theroadofprogrammers/article/details/54782062" target="_blank" rel="noopener">应用沙盒路径的获取</a></p>
+</li>
+<li><p>LinkMapFile</p>
+<ul>
+<li><p>首先来说一说什么是 LinkMap</p>
+<ul>
+<li>在iOS开发领域，LinkMap的输出是一个纯文本格式的文件，里面包含重要的编译信息及报错信息，这也是Apple用来分析你的应用的主要方式，通过这种方式可以发现应用中是否使用了私有库等不符合Apple提交应用规范的内容，但对于我们开发人员，LinkMap却是一个用于分析源码及查看Crash的有效途径</li>
+</ul>
+</li>
+<li><p>为什么要使用 LinkMap</p>
+<ul>
+<li><p>当一个中大型iOS项目在不断迭代更新的过程中，代码量日渐壮大，需要重构和review的代码也越来越多，可一旦代码达到一定程度后变得不是那么可控，为了使得项目还可以持续可集成稳健的开发下去，缩小iOS安装包大小是必须要做的事情，通常会从压缩图片和音频文件开始，使用开发工具查找冗余不用的资源文件，这一阶段之后只能通过对代码的重构来达到可执行文件整体瘦身的效果。当从事参与的一个项目在不断迭代过程中，App的安装包在不断变大，通过自己的shell脚本分析，多达几十万行，这时候非常有瘦身的必要，这其中包括了.h.m.mm.cpp.rss格式文件。观察项目中引入的Pods文件及相关第三方库，多达上百个库，这时候这样一个中大型App就涉及到应用瘦身的问题，如何才能有效解决代码不可控的问题，如何能提高项目中底层基础架构的稳定性及健壮性，相信LinkMap能给予我们一些答案。</p>
+</li>
+<li><p>LinkMap 的构成</p>
+<ul>
+<li>App的编译路径（#Path）<ul>
+<li><code># Path: /Users/lanya/Library/Developer/Xcode/DerivedData/littleTest-fcueraakmygtmodagachcreqjbjw/Build/Products/Debug/littleTest</code></li>
+</ul>
+</li>
+<li>App对应的架构（#Arch）<ul>
+<li><code># Arch: x86_64</code></li>
+</ul>
+</li>
+<li>App的完整的目标文件列表（#Object files）</li>
+<li>App的段表（#Section）</li>
+<li>App中具体目标文件在对应的section中的位置和大小（#Symbols）</li>
+</ul>
+</li>
+<li><p>LinkMap服务的开启方式及文件目录</p>
+<ul>
+<li>在 Build Settings 里设置 Write Link Map File 为 Yes 后每次编译都会在指定目录生成这样一个文件。<code>Xcode-&gt;Project-&gt;Build Settings-&gt; Search map -&gt; 设置 Write Link Map Files 选项为YES</code>（这里需要注意的是不是设置Pods.xcodeproj的LinkMap而是xxx-xxxxx.xcodeproj，其他项目也要去设置主工程的对应编译选项，以此类推</li>
+<li>文件位于指定的路径，默认是在<code>~/Library/Developer/Xcode/DerivedData/xxx-xxx-fwtuexpkzxsfkjaootcqwizogrhf/Build/Intermediates/xx-xxx.build/Debug-iphonesimulator/xxx-xxx.build/xxx-xxx-LinkMap-normal-x86_64.txt</code></li>
+<li>例如：我的一个项目 LitteleTest：<code>/Users/lanya/Library/Developer/Xcode/DerivedData/littleTest-fcueraakmygtmodagachcreqjbjw/Build/Intermediates.noindex/littleTest.build/Debug/littleTest.build/littleTest-LinkMap-normal-x86_64.txt</code></li>
+</ul>
+</li>
+<li><p>现在来说一说 LinkMap 各部分的作用</p>
+<ul>
+<li><p>App的完整的目标文件列表（#Object files）： 这个部分的内容都是 .m 文件编译后的 .o 和需要 link 的 .a 文件。前面是文件编号，后面是文件路径。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Object files:</span><br><span class="line">   [  0] linker synthesized</span><br><span class="line">   [  1] /Users/lanya/Library/Developer/Xcode/DerivedData/littleTest-fcueraakmygtmodagachcreqjbjw/Build/Intermediates.noindex/littleTest.build/Debug/littleTest.build/Objects-normal/x86_64/main.o</span><br><span class="line">   [  2] /Users/lanya/Library/Developer/Xcode/DerivedData/littleTest-fcueraakmygtmodagachcreqjbjw/Build/Intermediates.noindex/littleTest.build/Debug/littleTest.build/Objects-normal/x86_64/Test.o</span><br><span class="line">   [  3] /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/System/Library/Frameworks//Foundation.framework/Foundation.tbd</span><br><span class="line">   [  4] /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/usr/lib/libobjc.tbd</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>App的段表（#Section）：这里描述的是每个 Section 在可执行文件中的位置和大小。每个 Section 的 Segment 的类型分为 <strong>TEXT 代码段和 </strong>DATA 数据段两种。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Sections:</span><br><span class="line"><span class="meta">  #</span> Address	Size    	Segment	Section</span><br><span class="line">  0x100000B10	0x000002D9	__TEXT	__text</span><br><span class="line">  0x100000DEA	0x00000054	__TEXT	__stubs</span><br><span class="line">  0x100000E40	0x0000009C	__TEXT	__stub_helper</span><br><span class="line">  0x100000EDC	0x0000006E	__TEXT	__objc_methname</span><br><span class="line">  0x100000F4A	0x0000003B	__TEXT	__cstring</span><br><span class="line">  0x100000F85	0x00000007	__TEXT	__objc_classname</span><br><span class="line">  0x100000F8C	0x0000001D	__TEXT	__objc_methtype</span><br><span class="line">  0x100000FAC	0x00000048	__TEXT	__unwind_info</span><br><span class="line">  0x100001000	0x00000010	__DATA	__nl_symbol_ptr</span><br><span class="line">  0x100001010	0x00000070	__DATA	__la_symbol_ptr</span><br><span class="line">  0x100001080	0x00000060	__DATA	__cfstring</span><br><span class="line">  0x1000010E0	0x00000008	__DATA	__objc_classlist</span><br><span class="line">  0x1000010E8	0x00000008	__DATA	__objc_imageinfo</span><br><span class="line">  0x1000010F0	0x00000170	__DATA	__objc_const</span><br><span class="line">  0x100001260	0x00000020	__DATA	__objc_selrefs</span><br><span class="line">  0x100001280	0x00000008	__DATA	__objc_classrefs</span><br><span class="line">  0x100001288	0x00000008	__DATA	__objc_superrefs</span><br><span class="line">  0x100001290	0x00000010	__DATA	__objc_ivar</span><br><span class="line">  0x1000012A0	0x00000050	__DATA	__objc_data</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>App中具体目标文件在对应的section中的位置和大小（#Symbols）：Symbols 是对 Sections 进行了再划分。这里会描述所有的 methods，ivar 和字符串，及它们对应的地址，大小，文件编号信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Symbols:</span><br><span class="line">    # Address	Size    	File  Name</span><br><span class="line">    0x100000B10	0x00000106	[  1] _main</span><br><span class="line">    0x100000C20	0x000000A0	[  2] -[Test init]</span><br><span class="line">    0x100000CC0	0x00000060	[  2] -[Test setObject:]</span><br><span class="line">    0x100000D20	0x00000040	[  2] -[Test obj]</span><br><span class="line">    0x100000D60	0x00000040	[  2] -[Test setObj:]</span><br><span class="line">    0x100000DA0	0x00000049	[  2] -[Test .cxx_destruct]</span><br><span class="line">    0x100000DEA	0x00000006	[  3] _NSHomeDirectory</span><br><span class="line">    0x100000DF0	0x00000006	[  3] _NSLog</span><br><span class="line">    0x100000DF6	0x00000006	[  4] _objc_autoreleasePoolPop</span><br><span class="line">    0x100000DFC	0x00000006	[  4] _objc_autoreleasePoolPush</span><br><span class="line">    0x100000E02	0x00000006	[  4] _objc_autoreleaseReturnValue</span><br><span class="line">    0x100000E08	0x00000006	[  4] _objc_destroyWeak</span><br><span class="line">    0x100000E0E	0x00000006	[  4] _objc_loadWeakRetained</span><br><span class="line">    0x100000E14	0x00000006	[  4] _objc_msgSend</span><br><span class="line">    0x100000E1A	0x00000006	[  4] _objc_msgSendSuper2</span><br><span class="line">    0x100000E20	0x00000006	[  4] _objc_release</span><br><span class="line">    0x100000E26	0x00000006	[  4] _objc_retain</span><br><span class="line">    0x100000E2C	0x00000006	[  4] _objc_retainAutoreleasedReturnValue</span><br><span class="line">    0x100000E32	0x00000006	[  4] _objc_storeStrong</span><br><span class="line">    0x100000E38	0x00000006	[  4] _objc_storeWeak</span><br><span class="line">    0x100000E40	0x00000010	[  0] helper helper</span><br><span class="line">    0x100000E50	0x0000000A	[  3] _NSHomeDirectory</span><br><span class="line">    0x100000E5A	0x0000000A	[  3] _NSLog</span><br><span class="line">    0x100000E64	0x0000000A	[  4] _objc_autoreleasePoolPop</span><br><span class="line">    0x100000E6E	0x0000000A	[  4] _objc_autoreleasePoolPush</span><br><span class="line">    0x100000E78	0x0000000A	[  4] _objc_autoreleaseReturnValue</span><br><span class="line">    0x100000E82	0x0000000A	[  4] _objc_destroyWeak</span><br><span class="line">    0x100000E8C	0x0000000A	[  4] _objc_loadWeakRetained</span><br><span class="line">    0x100000E96	0x0000000A	[  4] _objc_msgSend</span><br><span class="line">    0x100000EA0	0x0000000A	[  4] _objc_msgSendSuper2</span><br><span class="line">    0x100000EAA	0x0000000A	[  4] _objc_release</span><br><span class="line">    0x100000EB4	0x0000000A	[  4] _objc_retain</span><br><span class="line">    0x100000EBE	0x0000000A	[  4] _objc_retainAutoreleasedReturnValue</span><br><span class="line">    0x100000EC8	0x0000000A	[  4] _objc_storeStrong</span><br><span class="line">    0x100000ED2	0x0000000A	[  4] _objc_storeWeak</span><br><span class="line">    0x100000EDC	0x00000006	[  1] literal string: alloc</span><br><span class="line">    0x100000EE2	0x00000014	[  1] literal string: initWithUTF8String:</span><br><span class="line">    0x100000EF6	0x00000020	[  1] literal string: stringByAppendingPathComponent:</span><br><span class="line">    0x100000F16	0x00000005	[  2] literal string: init</span><br><span class="line">    0x100000F1B	0x0000000B	[  2] literal string: setObject:</span><br><span class="line">    0x100000F26	0x0000000E	[  2] literal string: .cxx_destruct</span><br><span class="line">    0x100000F34	0x00000004	[  2] literal string: obj</span><br><span class="line">    0x100000F38	0x00000008	[  2] literal string: setObj:</span><br><span class="line">    0x100000F40	0x00000005	[  2] literal string: obj_</span><br><span class="line">    0x100000F45	0x00000005	[  2] literal string: _obj</span><br><span class="line">    0x100000F4A	0x00000009	[  1] literal string: starming</span><br><span class="line">    0x100000F53	0x0000000B	[  1] literal string: %@ rank %d</span><br><span class="line">    0x100000F5E	0x00000013	[  1] literal string: Documents/neuer.db</span><br><span class="line">    0x100000F71	0x00000003	[  1] literal string: %@</span><br><span class="line">    0x100000F74	0x00000004	[  2] literal string: obj</span><br><span class="line">    0x100000F78	0x0000000D	[  2] literal string: T@,W,N,V_obj</span><br><span class="line">    0x100000F85	0x00000005	[  2] literal string: Test</span><br><span class="line">    0x100000F8A	0x00000002	[  2] literal string: </span><br><span class="line">    0x100000F8C	0x00000008	[  2] literal string: @16@0:8</span><br><span class="line">    0x100000F94	0x0000000B	[  2] literal string: v24@0:8@16</span><br><span class="line">    0x100000F9F	0x00000008	[  2] literal string: v16@0:8</span><br><span class="line">    0x100000FA7	0x00000002	[  2] literal string: @</span><br><span class="line">    0x100000FAC	0x00000048	[  0] compact unwind info</span><br><span class="line">    0x100001000	0x00000008	[  0] non-lazy-pointer-to-local: dyld_stub_binder</span><br><span class="line">    0x100001008	0x00000008	[  0] non-lazy-pointer</span><br><span class="line">    0x100001010	0x00000008	[  3] _NSHomeDirectory</span><br><span class="line">    0x100001018	0x00000008	[  3] _NSLog</span><br><span class="line">    0x100001020	0x00000008	[  4] _objc_autoreleasePoolPop</span><br><span class="line">    0x100001028	0x00000008	[  4] _objc_autoreleasePoolPush</span><br><span class="line">    0x100001030	0x00000008	[  4] _objc_autoreleaseReturnValue</span><br><span class="line">    0x100001038	0x00000008	[  4] _objc_destroyWeak</span><br><span class="line">    0x100001040	0x00000008	[  4] _objc_loadWeakRetained</span><br><span class="line">    0x100001048	0x00000008	[  4] _objc_msgSend</span><br><span class="line">    0x100001050	0x00000008	[  4] _objc_msgSendSuper2</span><br><span class="line">    0x100001058	0x00000008	[  4] _objc_release</span><br><span class="line">    0x100001060	0x00000008	[  4] _objc_retain</span><br><span class="line">    0x100001068	0x00000008	[  4] _objc_retainAutoreleasedReturnValue</span><br><span class="line">    0x100001070	0x00000008	[  4] _objc_storeStrong</span><br><span class="line">    0x100001078	0x00000008	[  4] _objc_storeWeak</span><br><span class="line">    0x100001080	0x00000020	[  1] CFString</span><br><span class="line">    0x1000010A0	0x00000020	[  1] CFString</span><br><span class="line">    0x1000010C0	0x00000020	[  1] CFString</span><br><span class="line">    0x1000010E0	0x00000008	[  2] anon</span><br><span class="line">    0x1000010E8	0x00000008	[  0] objc image info</span><br><span class="line">    0x1000010F0	0x00000048	[  2] l_OBJC_METACLASS_RO_$_Test</span><br><span class="line">    0x100001138	0x00000080	[  2] l_OBJC_$_INSTANCE_METHODS_Test</span><br><span class="line">    0x1000011B8	0x00000048	[  2] l_OBJC_$_INSTANCE_VARIABLES_Test</span><br><span class="line">    0x100001200	0x00000018	[  2] l_OBJC_$_PROP_LIST_Test</span><br><span class="line">    0x100001218	0x00000048	[  2] l_OBJC_CLASS_RO_$_Test</span><br><span class="line">    0x100001260	0x00000008	[  1] pointer-to-literal-cstring</span><br><span class="line">    0x100001268	0x00000008	[  1] pointer-to-literal-cstring</span><br><span class="line">    0x100001270	0x00000008	[  1] pointer-to-literal-cstring</span><br><span class="line">    0x100001278	0x00000008	[  2] pointer-to-literal-cstring</span><br><span class="line">    0x100001280	0x00000008	[  1] objc-class-ref</span><br><span class="line">    0x100001288	0x00000008	[  2] anon</span><br><span class="line">    0x100001290	0x00000008	[  2] _OBJC_IVAR_$_Test.obj_</span><br><span class="line">    0x100001298	0x00000008	[  2] _OBJC_IVAR_$_Test._obj</span><br><span class="line">    0x1000012A0	0x00000028	[  2] _OBJC_CLASS_$_Test</span><br><span class="line">    0x1000012C8	0x00000028	[  2] _OBJC_METACLASS_$_Test</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>dSYM</p>
+<ul>
+<li>定义：在每次编译后都会生成一个 dSYM 文件，程序在执行中通过地址来调用方法函数，而 dSYM 文件里存储了函数地址映射，这样调用栈里的地址可以通过 dSYM 这个映射表能够获得具体函数的位置。一般都会用来处理 crash 时获取到的调用栈 .crash 文件将其符号化。</li>
+<li>作用： 当release的版本 crash的时候,会有一个日志文件,包含出错的内存地址, 使用symbolicatecrash工具能够把日志和dSYM文件转换成可以阅读的log信息,也就是将内存地址,转换成程序里的函数或变量和所属于的 文件名.（如何设置 release 版本？ Product -&gt; scheme -&gt; EditScheme）</li>
+<li>如何找到：<code>/Users/用户名/Library/Developer/Xcode/DerivedData/littleTest-fcueraakmygtmodagachcreqjbjw/Build/Products/Release</code></li>
+<li>dSYM崩溃日志的错误定位：需要使用 symbolicatecrash  这个 Xcode 自带的工具进行错误转换。 找到 symbolicatecrash ： <code>find /Applications/Xcode.app -name symbolicatecrash -type f</code> <ul>
+<li>找到位置为： <code>/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/PrivateFrameworks/DVTFoundation.framework/symbolicatecrash</code></li>
+</ul>
+</li>
+<li>之后将 symbolicatecrash， crash， dSYM 文件放在同一个目录下</li>
+<li>具体操作请看这篇：<a href="http://www.jianshu.com/p/0b6f5148dab8">总结的很好</a></li>
+</ul>
+</li>
+<li><p>Mach-O 文件</p>
+<ul>
+<li>首先来看看<a href="https://en.wikipedia.org/wiki/Fat_binary" target="_blank" rel="noopener">胖二进制的含义</a>：以上是维基百科的解释，但是主要来说，胖二进制是比普通二进制文件的内容要多的二进制文件，因为其中包含了需要支持不同CPU架构的iOS设备的兼容信息。</li>
+</ul>
+<p><img src="http://upload-images.jianshu.io/upload_images/3262069-4c9b4433ea0c503a.gif?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="mach.gif"></p>
+</li>
+</ul>
+<ul>
+<li><p>含义：Mach-O，是Mach object文件格式的缩写，是一种<a href="https://baike.baidu.com/item/%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6" target="_blank" rel="noopener">可执行文件</a>、<a href="https://baike.baidu.com/item/%E7%9B%AE%E6%A0%87%E4%BB%A3%E7%A0%81" target="_blank" rel="noopener">目标代码</a>、共享<a href="https://baike.baidu.com/item/%E7%A8%8B%E5%BA%8F%E5%BA%93" target="_blank" rel="noopener">程序库</a>、动态加载代码和核心DUMP。是a.out格式的一种替代。Mach-O 提供更多的可扩展性和更快的<a href="https://baike.baidu.com/item/%E7%AC%A6%E5%8F%B7%E8%A1%A8" target="_blank" rel="noopener">符号表</a>信息存取。Mach-O应用在基于Mach核心的系统上，目前NeXTSTEP、Darwin、Mac OS X（iPhone）都是使用这种<a href="https://baike.baidu.com/item/%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6" target="_blank" rel="noopener">可执行文件</a>格式。</p>
+</li>
+<li><p>记录编译后的可执行文件，对象代码，共享库，动态加载代码和内存转储的文件格式。不同于 xml 这样的文件，它只是二进制字节流，里面有不同的包含元信息的数据块，比如字节顺序，cpu 类型，块大小等。文件内容是不可以修改的，因为在 .app 目录中有个 _CodeSignature 的目录，里面包含了程序代码的签名，这个签名的作用就是保证签名后 .app 里的文件，包括资源文件，Mach-O 文件都不能够更改。</p>
+</li>
+<li><p>Mach-O 的内容：</p>
+<ul>
+<li>Mach-O Header：包含字节顺序，magic，cpu 类型，加载指令的数量等</li>
+<li>Load Commands：包含很多内容的表，包括区域的位置，符号表，动态符号表等。每个加载指令包含一个元信息，比如指令类型，名称，在二进制中的位置等。</li>
+<li>原始段数据（Raw segment data）：可以拥有多个段（segment），每个段可以拥有零个或多个区域（section）。每一个段（segment）都拥有一段虚拟地址映射到进程的地址空间。</li>
+</ul>
+</li>
+<li><p>先看看描述这个文件的结构体</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mach_header</span> &#123;</span></span><br><span class="line">  <span class="keyword">uint32_t</span>      magic;</span><br><span class="line">  <span class="keyword">cpu_type_t</span>    cputype;</span><br><span class="line">  <span class="keyword">cpu_subtype_t</span> cpusubtype;</span><br><span class="line">  <span class="keyword">uint32_t</span>      filetype;</span><br><span class="line">  <span class="keyword">uint32_t</span>      ncmds;</span><br><span class="line">  <span class="keyword">uint32_t</span>      sizeofcmds;</span><br><span class="line">  <span class="keyword">uint32_t</span>      flags;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">segment_command</span> &#123;</span></span><br><span class="line">  <span class="keyword">uint32_t</span>  cmd;</span><br><span class="line">  <span class="keyword">uint32_t</span>  cmdsize;</span><br><span class="line">  <span class="keyword">char</span>      segname[<span class="number">16</span>];</span><br><span class="line">  <span class="keyword">uint32_t</span>  vmaddr;</span><br><span class="line">  <span class="keyword">uint32_t</span>  vmsize;</span><br><span class="line">  <span class="keyword">uint32_t</span>  fileoff;</span><br><span class="line">  <span class="keyword">uint32_t</span>  filesize;</span><br><span class="line">  <span class="keyword">vm_prot_t</span> maxprot;</span><br><span class="line">  <span class="keyword">vm_prot_t</span> initprot;</span><br><span class="line">  <span class="keyword">uint32_t</span>  nsects;</span><br><span class="line">  <span class="keyword">uint32_t</span>  flags;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>根据这个结构体，需要先取出 magic，然后根据偏移量取出其它的信息。遍历 ncmds 能够获得所有的 segment。cputype 包含了 CPU_TYPE_I386，CPU_TYPE_X86_64，CPU_TYPE_ARM，CPU_TYPE_ARM64 等多种 CPU 的类型。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>Mach-O 文件参考文章</p>
+<ul>
+<li><a href="http://www.jianshu.com/p/bcc7ba20f900">Mach-O 具体定义</a></li>
+<li><a href="http://www.jianshu.com/p/8498cec10a41">趣谈 Mach-O加载过程</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>dyld动态链接<ul>
+<li>生成可执行文件后就是在启动时进行动态链接了，进行符号和地址的绑定。首先会加载所依赖的 dylibs，修正地址偏移，因为 iOS 会用 ASLR 来做地址偏移避免攻击，确定 Non-Lazy Pointer 地址进行符号地址绑定，加载所有类，最后执行 load 方法和 clang attribute 的 constructor 修饰函数。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>参考文章： <a href="http://blog.csdn.net/vincentiss/article/details/54617915" target="_blank" rel="noopener">深入剖析iOS编译</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS学习/" rel="tag"># iOS学习</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/15/盛兰雅的个人简历/" rel="next" title="盛兰雅的个人简历">
+                <i class="fa fa-chevron-left"></i> 盛兰雅的个人简历
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/images/avatar/avatar.png"
+                alt="shenglanya" />
+            
+              <p class="site-author-name" itemprop="name">shenglanya</p>
+              <p class="site-description motion-element" itemprop="description">记录自己成长的每一步</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/lanyasheng" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:lanyasheng1997@gmail.com" target="_blank" title="E-Mail">
+                    
+                      <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                link
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.jianshu.com/u/5e73c3aefeb5" title="简书" target="_blank">简书</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#常用的clang命令"><span class="nav-number">1.</span> <span class="nav-text">常用的clang命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译流程"><span class="nav-number">2.</span> <span class="nav-text">编译流程</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenglanya</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
